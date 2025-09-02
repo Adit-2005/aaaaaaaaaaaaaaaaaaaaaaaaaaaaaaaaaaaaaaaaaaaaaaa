@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd, numpy as np, joblib, glob, os, traceback, json
 from PIL import Image
@@ -128,16 +127,14 @@ with tab1:
                         pass
                 if hasattr(model, "predict_proba"):
                     p = float(model.predict_proba(X)[:,1][0])
-                    left_metric = right
                     # show result card
                     with right:
-                       st.markdown(f"""
+                        st.markdown(f"""
 <div style='border-radius:12px;padding:18px;background:linear-gradient(90deg,#fff7e6,#fff2de);'>
+    <h2 style='color:#b35b00;margin:0'>Risk: { 'High' if p>=0.5 else 'Low' } - {p:.2%}</h2>
+    <p style='margin:0'>Recommendation: { 'Close follow-up' if p>=0.5 else 'Standard discharge' }</p>
+</div>
 """, unsafe_allow_html=True)
-<h2 style='color:#b35b00;margin:0'>Risk: { 'High' if p>=0.5 else 'Low' } - {p:.2%}</h2>
-
-<p style='margin:0'>Recommendation: { 'Close follow-up' if p>=0.5 else 'Standard discharge' }</p>
-</div>\"\"\", unsafe_allow_html=True)
                         # gauge chart
                         fig = px.pie(values=[p,1-p], names=['Readmission','No Readmission'], hole=0.6)
                         fig.update_traces(textinfo='percent+label')
@@ -202,4 +199,3 @@ with tab3:
     st.write("Load attempts/errors:")
     for k,v in load_errors.items():
         st.write(f"- {k}: {v}")
-
