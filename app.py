@@ -241,7 +241,7 @@ with col1:
 with col2:
     st.markdown("<div style='text-align: right;'>", unsafe_allow_html=True)
     st.markdown(f"<div style='background-color: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block;'>Live</div>", unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markmarkdown("</div>", unsafe_allow_html=True)
 st.markdown("</div>", unsafe_allow_html=True)
 
 # Metrics row
@@ -425,31 +425,41 @@ def prepare_input_data(inputs, feature_names):
     
     return X
 
-# Function to safely get prediction probability
+# Function to safely get prediction probability - FIXED VERSION
 def safe_predict_proba(model, X):
     """Safely get prediction probability with error handling"""
     try:
+        # First try predict_proba
         if hasattr(model, "predict_proba"):
             proba = model.predict_proba(X)
-            # Ensure we're getting the probability for class 1 (readmission)
-            if proba.shape[1] > 1:  # If it's a binary classifier
-                p = float(proba[:, 1][0])
-            else:  # If it's a single class output
-                p = float(proba[0][0])
             
-            # Ensure the probability is between 0 and 1
-            if p > 1.0:
-                p = 1.0
-            elif p < 0.0:
-                p = 0.0
+            # Handle different shapes of probability arrays
+            if len(proba.shape) == 2:  # Standard binary classification
+                if proba.shape[1] > 1:  # Binary classifier with two classes
+                    p = float(proba[0, 1])  # Probability of class 1 (readmission)
+                else:  # Possibly a single class output
+                    p = float(proba[0, 0])
+            else:  # Handle 1D array case
+                p = float(proba[0])
                 
+            # Ensure the probability is between 0 and 1
+            p = max(0.0, min(1.0, p))
             return p
+        
+        # Fallback to predict if predict_proba is not available
+        elif hasattr(model, "predict"):
+            pred = model.predict(X)
+            # Return 1.0 for positive class, 0.0 for negative
+            return 1.0 if pred[0] == 1 else 0.0
+            
         else:
-            pred = model.predict(X)[0]
-            # If we only have predict, return 1.0 for positive class, 0.0 for negative
-            return 1.0 if pred == 1 else 0.0
+            st.error("Model doesn't have predict or predict_proba methods")
+            return 0.5  # Return neutral probability
+            
     except Exception as e:
         st.error(f"Prediction error: {str(e)}")
+        with st.expander("Error Details"):
+            st.text(traceback.format_exc())
         return 0.5  # Return neutral probability on error
 
 with tabs[0]:
