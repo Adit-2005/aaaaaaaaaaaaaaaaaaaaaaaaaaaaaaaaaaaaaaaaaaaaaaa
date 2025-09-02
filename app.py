@@ -241,7 +241,7 @@ with col1:
 with col2:
     st.markdown("<div style='text-align: right;'>", unsafe_allow_html=True)
     st.markdown(f"<div style='background-color: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block;'>Live</div>", unsafe_allow_html=True)
-    st.markmarkdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)  # Fixed: st.markdown instead of st.markmarkdown
 st.markdown("</div>", unsafe_allow_html=True)
 
 # Metrics row
