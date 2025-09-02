@@ -213,27 +213,65 @@ with col4:
 # Tabs with improved styling
 tabs = st.tabs(["📋 Single Patient", "📊 Batch Scoring", "🔍 Model Insights", "📈 Data Overview"])
 
+# Function to encode categorical values to numerical
+def encode_categorical_values(inputs, feature_names):
+    """Encode categorical values to numerical based on known mappings"""
+    encoded_inputs = inputs.copy()
+    
+    # Age range encoding
+    age_mapping = {
+        "[0-10)": 5, "[10-20)": 15, "[20-30)": 25, "[30-40)": 35,
+        "[40-50)": 45, "[50-60)": 55, "[60-70)": 65, "[70-80)": 75,
+        "[80-90)": 85, "[90-100)": 95
+    }
+    
+    # Gender encoding
+    gender_mapping = {
+        "Female": 0, "Male": 1, "Other/Unknown": 2
+    }
+    
+    # Encode known categorical features
+    for feature, value in inputs.items():
+        if "age" in feature.lower() and value in age_mapping:
+            encoded_inputs[feature] = age_mapping[value]
+        elif "gender" in feature.lower() and value in gender_mapping:
+            encoded_inputs[feature] = gender_mapping[value]
+        elif any(x in feature.lower() for x in ["num_", "number_", "time_", "count"]):
+            # Ensure numeric features are properly converted
+            try:
+                encoded_inputs[feature] = float(value) if value != "" else 0.0
+            except (ValueError, TypeError):
+                encoded_inputs[feature] = 0.0
+        elif value == "":
+            # Empty string values should be handled appropriately
+            encoded_inputs[feature] = 0.0
+    
+    return encoded_inputs
+
 # Function to prepare input data in correct format
 def prepare_input_data(inputs, feature_names):
     """Prepare input data in the correct format and order for the model"""
     if feature_names is None:
         return pd.DataFrame([inputs])
     
+    # Encode categorical values first
+    encoded_inputs = encode_categorical_values(inputs, feature_names)
+    
     # Create a DataFrame with the correct feature order
     X = pd.DataFrame(columns=feature_names)
     
-    # Fill in the values, converting to numeric where possible
+    # Fill in the values, ensuring all are numeric
     for feature in feature_names:
-        if feature in inputs:
+        if feature in encoded_inputs:
             try:
                 # Try to convert to numeric
-                X[feature] = [pd.to_numeric(inputs[feature])]
+                X[feature] = [float(encoded_inputs[feature])]
             except (ValueError, TypeError):
-                # If conversion fails, keep as string
-                X[feature] = [inputs[feature]]
+                # If conversion fails, use 0 as default
+                X[feature] = [0.0]
         else:
             # Fill missing features with default values
-            X[feature] = [0]  # Default numeric value
+            X[feature] = [0.0]
     
     return X
 
@@ -305,6 +343,11 @@ with tabs[0]:
             try:
                 # Prepare input data in correct format
                 X = prepare_input_data(inputs, feature_names)
+                
+                # Debug: Show the prepared data
+                with st.expander("Debug: Prepared Data"):
+                    st.write("Input features:", feature_names)
+                    st.dataframe(X)
                 
                 if hasattr(model, "predict_proba"):
                     p = float(model.predict_proba(X)[:,1][0])
@@ -398,6 +441,34 @@ with tabs[1]:
                 else:
                     # Ensure correct column order
                     X = df[feature_names]
+                    
+                    # Convert categorical columns to numerical
+                    for col in X.columns:
+                        if X[col].dtype == 'object':
+                            # Try to convert to numeric first
+                            try:
+                                X[col] = pd.to_numeric(X[col], errors='ignore')
+                            except:
+                                pass
+                            
+                            # If still object type, apply encoding
+                            if X[col].dtype == 'object':
+                                # Simple encoding for common categorical variables
+                                if 'age' in col.lower():
+                                    age_mapping = {
+                                        "[0-10)": 5, "[10-20)": 15, "[20-30)": 25, "[30-40)": 35,
+                                        "[40-50)": 45, "[50-60)": 55, "[60-70)": 65, "[70-80)": 75,
+                                        "[80-90)": 85, "[90-100)": 95
+                                    }
+                                    X[col] = X[col].map(age_mapping).fillna(0)
+                                elif 'gender' in col.lower():
+                                    gender_mapping = {
+                                        "Female": 0, "Male": 1, "Other/Unknown": 2
+                                    }
+                                    X[col] = X[col].map(gender_mapping).fillna(0)
+                                else:
+                                    # For other categorical variables, use simple label encoding
+                                    X[col] = pd.factorize(X[col])[0]
             else:
                 X = df
             
