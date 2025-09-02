@@ -234,39 +234,39 @@ with tabs[0]:
             other_features = [f for f in feature_names if f not in demographic_features + medical_features + encounter_features]
             
             with st.expander("Demographic Information", expanded=True):
-                for f in demographic_features:
+                for i, f in enumerate(demographic_features):
                     lbl = label_map.get(f, f.replace("_"," ").title())
                     if "age" in f.lower() and "range" not in f.lower():
-                        inputs[f] = st.selectbox(lbl, options=["[0-10)","[10-20)","[20-30)","[30-40)","[40-50)","[50-60)","[60-70)","[70-80)","[80-90)","[90-100)"], index=5, key=f)
+                        inputs[f] = st.selectbox(lbl, options=["[0-10)","[10-20)","[20-30)","[30-40)","[40-50)","[50-60)","[60-70)","[70-80)","[80-90)","[90-100)"], index=5, key=f"demo_{i}")
                     elif "gender" in f.lower():
-                        inputs[f] = st.selectbox(lbl, options=["Female", "Male", "Other/Unknown"], key=f)
+                        inputs[f] = st.selectbox(lbl, options=["Female", "Male", "Other/Unknown"], key=f"demo_{i}")
                     else:
-                        inputs[f] = st.text_input(lbl, key=f)
+                        inputs[f] = st.text_input(lbl, key=f"demo_{i}")
             
             with st.expander("Medical Information"):
-                for f in medical_features:
+                for i, f in enumerate(medical_features):
                     lbl = label_map.get(f, f.replace("_"," ").title())
                     if any(x in f.lower() for x in ["num_","number_","time_","count"]):
-                        inputs[f] = st.number_input(lbl, value=0, step=1, key=f)
+                        inputs[f] = st.number_input(lbl, value=0, step=1, key=f"med_{i}")
                     else:
-                        inputs[f] = st.text_input(lbl, key=f)
+                        inputs[f] = st.text_input(lbl, key=f"med_{i}")
             
             with st.expander("Encounter Details"):
-                for f in encounter_features:
+                for i, f in enumerate(encounter_features):
                     lbl = label_map.get(f, f.replace("_"," ").title())
                     if any(x in f.lower() for x in ["num_","number_","time_","count"]):
-                        inputs[f] = st.number_input(lbl, value=0, step=1, key=f)
+                        inputs[f] = st.number_input(lbl, value=0, step=1, key=f"enc_{i}")
                     else:
-                        inputs[f] = st.text_input(lbl, key=f)
+                        inputs[f] = st.text_input(lbl, key=f"enc_{i}")
             
             if other_features:
                 with st.expander("Other Information"):
-                    for f in other_features:
+                    for i, f in enumerate(other_features):
                         lbl = label_map.get(f, f.replace("_"," ").title())
                         if any(x in f.lower() for x in ["num_","number_","time_","count"]):
-                            inputs[f] = st.number_input(lbl, value=0, step=1, key=f)
+                            inputs[f] = st.number_input(lbl, value=0, step=1, key=f"oth_{i}")
                         else:
-                            inputs[f] = st.text_input(lbl, key=f)
+                            inputs[f] = st.text_input(lbl, key=f"oth_{i}")
         
         else:
             st.info("Model doesn't expose feature names. Use Batch Scoring with CSV instead.")
@@ -355,7 +355,7 @@ with tabs[1]:
     st.subheader("Batch Scoring")
     st.write("Upload a CSV file containing patient data for batch processing.")
     
-    uploaded = st.file_uploader("Choose a CSV file", type=["csv"], help="The file should contain all required features but no target column")
+    uploaded = st.file_uploader("Choose a CSV file", type=["csv"], help="The file should contain all required features but no target column", key="batch_uploader")
     
     if uploaded:
         try:
@@ -381,7 +381,7 @@ with tabs[1]:
             else:
                 X = df
             
-            if st.button("Process Batch", type="primary", use_container_width=True):
+            if st.button("Process Batch", type="primary", use_container_width=True, key="process_batch"):
                 with st.spinner("Processing data..."):
                     if hasattr(model, "predict_proba"):
                         probs = model.predict_proba(X)[:,1]
@@ -417,7 +417,8 @@ with tabs[1]:
                     data=csv,
                     file_name="readmission_predictions.csv",
                     mime="text/csv",
-                    use_container_width=True
+                    use_container_width=True,
+                    key="download_results"
                 )
         
         except Exception as e:
