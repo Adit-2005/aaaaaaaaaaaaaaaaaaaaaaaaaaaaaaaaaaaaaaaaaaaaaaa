@@ -311,29 +311,19 @@ st.markdown("<div class='card'>", unsafe_allow_html=True)
 col1, col2 = st.columns([3, 1])
 with col1:
     st.markdown("<h1 class='main-header'>Hospital Readmission Risk Assessment</h1>", unsafe_allow_html=True)
-    st.markdown(f"**Model:** `{model_name}` • Using actual model parameters for accurate predictions")
+    st.markdown("Quickly assess patient readmission risk with our AI-powered tool")
 with col2:
     st.markdown("<div style='text-align: right;'>", unsafe_allow_html=True)
     st.markdown(f"<div style='background-color: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block;'>Active</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 st.markdown("</div>", unsafe_allow_html=True)
 
-# Display model features for debugging
-if feature_names:
-    with st.expander("🔍 Model Features (Debug View)"):
-        st.write("These are the features your model was trained on:")
-        for i, feature in enumerate(feature_names):
-            st.write(f"{i+1}. {feature}")
-
 # Metrics row
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-    st.markdown("**Model Features**")
-    if feature_names:
-        st.markdown(f"<h2>{len(feature_names)}</h2>", unsafe_allow_html=True)
-    else:
-        st.markdown("<h2>—</h2>", unsafe_allow_html=True)
+    st.markdown("**Assessment Time**")
+    st.markdown(f"<h2>< 2 min</h2>", unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
 with col2:
@@ -357,45 +347,102 @@ with col4:
 # Tabs
 tabs = st.tabs(["👤 Patient Assessment", "📊 Batch Processing", "❓ How It Works"])
 
-# Function to create input widgets based on ACTUAL model features
-def create_model_based_inputs(feature_names):
+# Function to create user-friendly input widgets
+def create_user_friendly_inputs(feature_names):
     inputs = {}
     
     if not feature_names:
         st.info("Please use the Batch Processing tab for CSV file uploads.")
         return inputs
     
+    # Simplified input categories with clear language
     st.markdown('<div class="form-section">', unsafe_allow_html=True)
-    st.markdown("<h3>📋 Patient Information (Based on Your Model)</h3>", unsafe_allow_html=True)
+    st.markdown("<h3>👤 Patient Information</h3>", unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
-    # Create inputs for each feature in the model
-    for i, feature in enumerate(feature_names):
-        # Get user-friendly label
-        friendly_name = label_map.get(feature, feature.replace('_', ' ').title())
-        
-        st.markdown(f'<div class="form-field">', unsafe_allow_html=True)
-        st.markdown(f'<label for="{feature}">{friendly_name}</label>', unsafe_allow_html=True)
-        
-        # Determine appropriate input type based on feature name
-        if any(x in feature.lower() for x in ['age', 'time', 'length', 'duration']):
-            inputs[feature] = st.slider(friendly_name, 0, 100, 50, 
-                                      key=f"input_{i}", help=f"Enter value for {friendly_name}")
-        elif any(x in feature.lower() for x in ['num', 'number', 'count']):
-            inputs[feature] = st.number_input(friendly_name, 0, 100, 0, 
-                                           key=f"input_{i}", help=f"Enter value for {friendly_name}")
-        elif any(x in feature.lower() for x in ['gender', 'sex']):
-            inputs[feature] = st.selectbox(friendly_name, ["Female", "Male", "Other/Unknown"], 
-                                         key=f"input_{i}", help=f"Select value for {friendly_name}")
-        elif any(x in feature.lower() for x in ['diabetes', 'a1c', 'glucose']):
-            inputs[feature] = st.selectbox(friendly_name, ["No", "Yes", "Borderline"], 
-                                         key=f"input_{i}", help=f"Select value for {friendly_name}")
-        else:
-            # Default to number input
-            inputs[feature] = st.number_input(friendly_name, 0, 100, 0, 
-                                           key=f"input_{i}", help=f"Enter value for {friendly_name}")
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+    # Age
+    st.markdown('<div class="form-field">', unsafe_allow_html=True)
+    st.markdown('<label for="age">Patient Age</label>', unsafe_allow_html=True)
+    inputs["age"] = st.slider("Patient Age", 18, 100, 55, 
+                            help="Select the patient's current age", key="age_input")
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Gender
+    st.markdown('<div class="form-field">', unsafe_allow_html=True)
+    st.markdown('<label for="gender">Patient Gender</label>', unsafe_allow_html=True)
+    inputs["gender"] = st.selectbox("Patient Gender", ["Female", "Male", "Other/Prefer not to say"], 
+                                  help="Select the patient's gender", key="gender_input")
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown('<div class="form-section">', unsafe_allow_html=True)
+    st.markdown("<h3>🏥 Hospital Stay Details</h3>", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Time in hospital
+    st.markdown('<div class="form-field">', unsafe_allow_html=True)
+    st.markdown('<label for="time_in_hospital">Days in Hospital</label>', unsafe_allow_html=True)
+    inputs["time_in_hospital"] = st.slider("Days in Hospital", 1, 30, 5, 
+                                         help="How many days was the patient hospitalized?", key="time_input")
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Number of medications
+    st.markdown('<div class="form-field">', unsafe_allow_html=True)
+    st.markdown('<label for="num_medications">Number of Medications</label>', unsafe_allow_html=True)
+    inputs["num_medications"] = st.slider("Number of Medications", 0, 30, 8, 
+                                        help="How many medications is the patient currently taking?", key="meds_input")
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Number of procedures
+    st.markdown('<div class="form-field">', unsafe_allow_html=True)
+    st.markdown('<label for="num_procedures">Number of Procedures</label>', unsafe_allow_html=True)
+    inputs["num_procedures"] = st.slider("Number of Procedures", 0, 10, 1, 
+                                       help="How many procedures did the patient undergo during this stay?", key="proc_input")
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    st.markdown('<div class="form-section">', unsafe_allow_html=True)
+    st.markdown("<h3>📋 Medical History</h3>", unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Number of diagnoses
+    st.markdown('<div class="form-field">', unsafe_allow_html=True)
+    st.markdown('<label for="number_diagnoses">Number of Diagnoses</label>', unsafe_allow_html=True)
+    inputs["number_diagnoses"] = st.slider("Number of Diagnoses", 1, 20, 5, 
+                                         help="How many distinct diagnoses does the patient have?", key="diag_input")
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Diabetes status
+    st.markdown('<div class="form-field">', unsafe_allow_html=True)
+    st.markdown('<label for="diabetes">Diabetes Status</label>', unsafe_allow_html=True)
+    inputs["diabetes"] = st.selectbox("Diabetes Status", ["No", "Yes", "Borderline"], 
+                                    help="Does the patient have diabetes?", key="diabetes_input")
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Previous visits
+    st.markdown('<div class="form-field">', unsafe_allow_html=True)
+    st.markdown('<label for="number_emergency">Emergency Visits (Past Year)</label>', unsafe_allow_html=True)
+    inputs["number_emergency"] = st.slider("Emergency Visits (Past Year)", 0, 10, 0, 
+                                         help="How many emergency visits in the past year?", key="emergency_input")
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Lab procedures
+    st.markdown('<div class="form-field">', unsafe_allow_html=True)
+    st.markdown('<label for="num_lab_procedures">Lab Tests Performed</label>', unsafe_allow_html=True)
+    inputs["num_lab_procedures"] = st.slider("Lab Tests Performed", 0, 100, 45, 
+                                          help="How many lab tests were performed during this stay?", key="lab_input")
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Set reasonable defaults for other features
+    default_features = {
+        "number_outpatient": 0,
+        "number_inpatient": 0,
+        "max_glu_serum": 0,
+        "A1Cresult": 0,
+        "change": 0,
+        "diabetesMed": 0
+    }
+    
+    for feature, value in default_features.items():
+        inputs[feature] = value
     
     return inputs
 
@@ -416,7 +463,7 @@ def encode_categorical_values(inputs):
                 encoded_inputs[feature] = 0
             elif value == "Male":
                 encoded_inputs[feature] = 1
-            elif value == "Other/Unknown":
+            elif value == "Other/Prefer not to say":
                 encoded_inputs[feature] = 2
             else:
                 # Try to convert to numeric if it's a string representation of a number
@@ -494,17 +541,17 @@ def safe_predict_proba(model, X):
 with tabs[0]:
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.subheader("👤 Patient Readmission Risk Assessment")
-    st.write("Complete this form using the actual parameters from your trained model for accurate predictions.")
+    st.write("Complete this simple form to calculate a patient's readmission risk. All fields are required.")
     st.markdown('</div>', unsafe_allow_html=True)
     
     col1, col2 = st.columns([1, 1])
     
     with col1:
         st.markdown('<div class="card">', unsafe_allow_html=True)
-        st.markdown("### Model Parameters")
+        st.markdown("### Patient Details")
         
-        # Create input form based on ACTUAL model features
-        inputs = create_model_based_inputs(feature_names)
+        # Create user-friendly input form
+        inputs = create_user_friendly_inputs(feature_names)
         
         # Calculate button
         if st.button("📊 Calculate Readmission Risk", use_container_width=True, type="primary"):
@@ -524,11 +571,6 @@ with tabs[0]:
                     
                     # Prepare input data in correct format
                     X = prepare_input_data(inputs, feature_names)
-                    
-                    # Debug: Show the prepared data
-                    with st.expander("🔍 Debug: Prepared Data for Model"):
-                        st.write("Input data being sent to the model:")
-                        st.dataframe(X)
                     
                     # Get prediction probability with error handling
                     p = safe_predict_proba(model, X)
@@ -593,7 +635,7 @@ with tabs[0]:
             st.markdown('<div class="card" style="height: 600px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);">', unsafe_allow_html=True)
             st.markdown("<div style='text-align: center; color: #64748b;'>", unsafe_allow_html=True)
             st.markdown("<h3>👈 Complete the assessment form</h3>", unsafe_allow_html=True)
-            st.markdown("<p>Enter values for all model parameters and click 'Calculate Readmission Risk'</p>", unsafe_allow_html=True)
+            st.markdown("<p>Enter patient information and click 'Calculate Readmission Risk'</p>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
@@ -618,11 +660,11 @@ with tabs[2]:
     st.markdown("""
     ### About This Tool
     
-    This readmission risk assessment tool uses your trained machine learning model to predict the likelihood of a patient being readmitted to the hospital within 30 days of discharge.
+    This readmission risk assessment tool uses machine learning to predict the likelihood of a patient being readmitted to the hospital within 30 days of discharge.
     
     ### How to Use
     
-    1. **Complete the Form**: Fill out all the fields with the actual parameters your model was trained on
+    1. **Complete the Form**: Fill out the patient assessment form with the required information
     2. **Calculate Risk**: Click the "Calculate Readmission Risk" button
     3. **Review Results**: View the risk percentage and recommendations
     
