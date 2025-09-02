@@ -1,0 +1,14 @@
+{
+  "age": "Age Range",
+  "time_in_hospital": "Time in Hospital (days)",
+  "num_procedures": "Number of Procedures",
+  "num_medications": "Number of Medications",
+  "number_outpatient_log": "Outpatient Visits (log)",
+  "number_emergency_log": "Emergency Visits (log)",
+  "number_inpatient_log": "Inpatient Visits (log)",
+  "number_diagnoses": "Number of Diagnoses",
+  "race": "Race",
+  "gender": "Gender",
+  "max_glu_serum": "Max Glucose Serum",
+  "A1Cresult": "A1C Result"
+}
