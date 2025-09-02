@@ -8,7 +8,7 @@ import time
 
 # Page configuration
 st.set_page_config(
-    page_title="MedPredict AI - Hospital Analytics", 
+    page_title="QuickReadmit - Hospital Analytics", 
     page_icon="🏥", 
     layout="wide",
     initial_sidebar_state="expanded"
@@ -41,24 +41,6 @@ st.markdown("""
         margin-bottom: 1.5rem;
         background-color: white;
         border: 1px solid #e2e8f0;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    
-    .card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-    }
-    
-    /* Form group styling */
-    .form-group {
-        margin-bottom: 1.2rem;
-    }
-    
-    .form-group label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 600;
-        color: #374151;
     }
     
     /* Metric cards */
@@ -119,34 +101,12 @@ st.markdown("""
         padding: 12px 20px;
         font-weight: 600;
         color: #64748b;
-        transition: all 0.3s ease;
     }
     
     .stTabs [aria-selected="true"] {
         background-color: white;
         color: #1e3a8a;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    }
-    
-    /* Sidebar styling */
-    .sidebar .sidebar-content {
-        background: linear-gradient(180deg, #1e3a8a 0%, #3b82f6 100%);
-        color: white;
-    }
-    
-    .sidebar .stButton button {
-        background-color: white;
-        color: #1e3a8a;
-        border-radius: 8px;
-        font-weight: 600;
-        padding: 10px 20px;
-        border: none;
-        transition: all 0.3s ease;
-    }
-    
-    .sidebar .stButton button:hover {
-        background-color: #f1f5f9;
-        transform: translateY(-1px);
     }
     
     /* Button styling */
@@ -157,12 +117,6 @@ st.markdown("""
         border-radius: 8px;
         padding: 12px 24px;
         font-weight: 600;
-        transition: all 0.3s ease;
-    }
-    
-    .stButton button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
     }
     
     /* Input field styling */
@@ -176,41 +130,6 @@ st.markdown("""
     .stTextInput input:focus, .stNumberInput input:focus, .stSelectbox select:focus {
         border-color: #3b82f6;
         box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-    }
-    
-    /* Expander styling */
-    .streamlit-expanderHeader {
-        font-weight: 600;
-        color: #1e3a8a;
-        font-size: 1.1rem;
-    }
-    
-    /* Progress bar */
-    .stProgress > div > div {
-        background: linear-gradient(90deg, #1e3a8a 0%, #3b82f6 100%);
-    }
-    
-    /* Custom badges */
-    .badge {
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-    }
-    
-    .badge-success {
-        background-color: #dcfce7;
-        color: #166534;
-    }
-    
-    .badge-warning {
-        background-color: #fef3c7;
-        color: #92400e;
-    }
-    
-    .badge-danger {
-        background-color: #fee2e2;
-        color: #991b1b;
     }
     
     /* Form section headers */
@@ -227,53 +146,69 @@ st.markdown("""
         color: #1e3a8a;
         font-size: 1.2rem;
     }
+    
+    /* Quick form styling */
+    .quick-form {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    @media (max-width: 1200px) {
+        .quick-form {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .form-field {
+        margin-bottom: 1rem;
+    }
+    
+    .form-field label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #374151;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 # Sidebar with enhanced design
 with st.sidebar:
     # Logo and header
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        if os.path.exists("logo.png"):
-            st.image("logo.png", use_column_width=True)
-        else:
-            st.markdown("<div style='text-align: center; font-size: 3rem;'>🏥</div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align: center;'>", unsafe_allow_html=True)
+    if os.path.exists("logo.png"):
+        st.image("logo.png", use_column_width=True)
+    else:
+        st.markdown("<div style='text-align: center; font-size: 3rem;'>🏥</div>", unsafe_allow_html=True)
     
-    st.markdown("<h1 style='text-align: center; color: white; margin-bottom: 0.5rem;'>MedPredict AI</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: rgba(255, 255, 255, 0.8); margin-top: 0;'>Hospital Readmission Analytics</p>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: white; margin-bottom: 0.5rem;'>QuickReadmit</h1>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: rgba(255, 255, 255, 0.8); margin-top: 0;'>Rapid Risk Assessment</p>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
     
     st.markdown("---")
     
     # Navigation
     st.markdown("### 📍 Navigation")
-    nav_options = ["Patient Assessment", "Batch Processing", "Model Analytics", "Performance Dashboard"]
+    nav_options = ["Quick Assessment", "Batch Processing", "Model Info"]
     selected_nav = st.radio("", nav_options, label_visibility="collapsed")
     
     st.markdown("---")
     
     # Quick stats
-    st.markdown("### 📊 Quick Stats")
+    st.markdown("### 📊 Today's Stats")
     col1, col2 = st.columns(2)
     with col1:
-        st.metric("Patients Today", "24", "+3")
+        st.metric("Assessments", "24", "+3")
     with col2:
-        st.metric("Readmission Rate", "8.3%", "-1.2%")
-    
-    st.markdown("---")
-    
-    # System status
-    st.markdown("### 🔄 System Status")
-    st.markdown("<div class='badge badge-success'>Operational</div>", unsafe_allow_html=True)
-    st.caption("Last updated: " + datetime.now().strftime("%Y-%m-%d %H:%M"))
+        st.metric("Avg. Risk", "18.7%", "-1.2%")
     
     st.markdown("---")
     
     # Support section
     st.markdown("### 🆘 Support")
-    st.markdown("**Email:** support@medpredict.ai")
-    st.markdown("**Phone:** +1 (800) 555-HEALTH")
-    st.markdown("**Hours:** 24/7")
+    st.markdown("**Email:** support@quickreadmit.com")
+    st.markdown("**Phone:** +1 (800) 555-READMIT")
 
 # Load label map
 label_map = {}
@@ -344,11 +279,11 @@ except Exception:
 st.markdown("<div class='card'>", unsafe_allow_html=True)
 col1, col2 = st.columns([3, 1])
 with col1:
-    st.markdown("<h1 class='main-header'>MedPredict AI Readmission Dashboard</h1>", unsafe_allow_html=True)
-    st.markdown(f"**Model in use:** `{model_name}` • **Version:** 3.2.1 • **Last updated:** {datetime.now().strftime('%Y-%m-%d')}")
+    st.markdown("<h1 class='main-header'>QuickReadmit Risk Assessment</h1>", unsafe_allow_html=True)
+    st.markdown(f"**Powered by:** `{model_name}` • **Version:** 1.0.0")
 with col2:
     st.markdown("<div style='text-align: right;'>", unsafe_allow_html=True)
-    st.markdown(f"<div class='badge badge-success'>Live</div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='background-color: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; display: inline-block;'>Live</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 st.markdown("</div>", unsafe_allow_html=True)
 
@@ -356,11 +291,8 @@ st.markdown("</div>", unsafe_allow_html=True)
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-    st.markdown("**Total Features**")
-    if feature_names:
-        st.markdown(f"<h2>{len(feature_names)}</h2>", unsafe_allow_html=True)
-    else:
-        st.markdown("<h2>—</h2>", unsafe_allow_html=True)
+    st.markdown("**Assessment Time**")
+    st.markdown(f"<h2>< 2 min</h2>", unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
 with col2:
@@ -371,7 +303,7 @@ with col2:
 
 with col3:
     st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-    st.markdown("**Today's Predictions**")
+    st.markdown("**Today's Assessments**")
     st.markdown(f"<h2>24</h2>", unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -382,7 +314,7 @@ with col4:
     st.markdown('</div>', unsafe_allow_html=True)
 
 # Tabs with improved styling
-tabs = st.tabs(["👨‍💼 Patient Assessment", "📊 Batch Processing", "🔍 Model Analytics", "📈 Performance Dashboard"])
+tabs = st.tabs(["⚡ Quick Assessment", "📊 Batch Processing", "🔍 Model Info"])
 
 # Function to encode categorical values to numerical
 def encode_categorical_values(inputs, feature_names):
@@ -391,14 +323,22 @@ def encode_categorical_values(inputs, feature_names):
     
     # Age range encoding
     age_mapping = {
-        "[0-10)": 5, "[10-20)": 15, "[20-30)": 25, "[30-40)": 35,
-        "[40-50)": 45, "[50-60)": 55, "[60-70)": 65, "[70-80)": 75,
-        "[80-90)": 85, "[90-100)": 95
+        "Under 50": 45, "50-59": 55, "60-69": 65, "70-79": 75, "80+": 85
     }
     
     # Gender encoding
     gender_mapping = {
         "Female": 0, "Male": 1, "Other/Unknown": 2
+    }
+    
+    # Diabetes encoding
+    diabetes_mapping = {
+        "No": 0, "Yes": 1, "Borderline": 0.5
+    }
+    
+    # Medication encoding
+    meds_mapping = {
+        "None": 0, "1-5": 3, "6-10": 8, "10+": 12
     }
     
     # Encode known categorical features
@@ -407,7 +347,11 @@ def encode_categorical_values(inputs, feature_names):
             encoded_inputs[feature] = age_mapping[value]
         elif "gender" in feature.lower() and value in gender_mapping:
             encoded_inputs[feature] = gender_mapping[value]
-        elif any(x in feature.lower() for x in ["num_", "number_", "time_", "count"]):
+        elif "diabet" in feature.lower() and value in diabetes_mapping:
+            encoded_inputs[feature] = diabetes_mapping[value]
+        elif "med" in feature.lower() and value in meds_mapping:
+            encoded_inputs[feature] = meds_mapping[value]
+        elif any(x in feature.lower() for x in ["num_", "number_", "time_", "count", "visit", "admit"]):
             # Ensure numeric features are properly converted
             try:
                 encoded_inputs[feature] = float(value) if value != "" else 0.0
@@ -448,8 +392,8 @@ def prepare_input_data(inputs, feature_names):
 
 with tabs[0]:
     st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.subheader("👨‍💼 Patient Risk Assessment")
-    st.write("Complete the patient assessment form to calculate readmission risk probability.")
+    st.subheader("⚡ Quick Patient Assessment")
+    st.write("Complete this brief form to calculate readmission risk in under 2 minutes.")
     st.markdown('</div>', unsafe_allow_html=True)
     
     col1, col2 = st.columns([1, 1])
@@ -459,98 +403,72 @@ with tabs[0]:
         st.markdown("### Patient Information")
         
         inputs = {}
-        if feature_names:
-            # Group features by category for better organization
-            demographic_features = [f for f in feature_names if any(x in f.lower() for x in ['age', 'gender', 'race', 'ethnic'])]
-            medical_features = [f for f in feature_names if any(x in f.lower() for x in ['diag', 'med', 'glucose', 'a1c', 'blood'])]
-            encounter_features = [f for f in feature_names if any(x in f.lower() for x in ['time', 'visit', 'admit', 'discharge', 'number'])]
-            other_features = [f for f in feature_names if f not in demographic_features + medical_features + encounter_features]
-            
-            # Demographic Information
-            st.markdown('<div class="form-section">', unsafe_allow_html=True)
-            st.markdown("<h3>👤 Demographic Information</h3>", unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-            for i, f in enumerate(demographic_features):
-                lbl = label_map.get(f, f.replace("_"," ").title())
-                if "age" in f.lower() and "range" not in f.lower():
-                    st.markdown(f'<div class="form-group">', unsafe_allow_html=True)
-                    st.markdown(f'<label for="{f}">{lbl}</label>', unsafe_allow_html=True)
-                    inputs[f] = st.selectbox(lbl, options=["[0-10)","[10-20)","[20-30)","[30-40)","[40-50)","[50-60)","[60-70)","[70-80)","[80-90)","[90-100)"], 
-                                           index=5, key=f"demo_{i}", label_visibility="collapsed")
-                    st.markdown('</div>', unsafe_allow_html=True)
-                elif "gender" in f.lower():
-                    st.markdown(f'<div class="form-group">', unsafe_allow_html=True)
-                    st.markdown(f'<label for="{f}">{lbl}</label>', unsafe_allow_html=True)
-                    inputs[f] = st.selectbox(lbl, options=["Female", "Male", "Other/Unknown"], 
-                                           key=f"demo_{i}", label_visibility="collapsed")
-                    st.markdown('</div>', unsafe_allow_html=True)
-                else:
-                    st.markdown(f'<div class="form-group">', unsafe_allow_html=True)
-                    st.markdown(f'<label for="{f}">{lbl}</label>', unsafe_allow_html=True)
-                    inputs[f] = st.text_input(lbl, value="", key=f"demo_{i}", placeholder="Enter value", label_visibility="collapsed")
-                    st.markdown('</div>', unsafe_allow_html=True)
-            
-            # Medical Information
-            st.markdown('<div class="form-section">', unsafe_allow_html=True)
-            st.markdown("<h3>🏥 Medical Information</h3>", unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-            for i, f in enumerate(medical_features):
-                lbl = label_map.get(f, f.replace("_"," ").title())
-                if any(x in f.lower() for x in ["num_","number_","time_","count"]):
-                    st.markdown(f'<div class="form-group">', unsafe_allow_html=True)
-                    st.markdown(f'<label for="{f}">{lbl}</label>', unsafe_allow_html=True)
-                    inputs[f] = st.number_input(lbl, value=0, step=1, key=f"med_{i}", 
-                                              label_visibility="collapsed", min_value=0)
-                    st.markdown('</div>', unsafe_allow_html=True)
-                else:
-                    st.markdown(f'<div class="form-group">', unsafe_allow_html=True)
-                    st.markdown(f'<label for="{f}">{lbl}</label>', unsafe_allow_html=True)
-                    inputs[f] = st.text_input(lbl, value="", key=f"med_{i}", placeholder="Enter value", label_visibility="collapsed")
-                    st.markdown('</div>', unsafe_allow_html=True)
-            
-            # Encounter Details
-            st.markdown('<div class="form-section">', unsafe_allow_html=True)
-            st.markdown("<h3>📋 Encounter Details</h3>", unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-            for i, f in enumerate(encounter_features):
-                lbl = label_map.get(f, f.replace("_"," ").title())
-                if any(x in f.lower() for x in ["num_","number_","time_","count"]):
-                    st.markdown(f'<div class="form-group">', unsafe_allow_html=True)
-                    st.markdown(f'<label for="{f}">{lbl}</label>', unsafe_allow_html=True)
-                    inputs[f] = st.number_input(lbl, value=0, step=1, key=f"enc_{i}", 
-                                              label_visibility="collapsed", min_value=0)
-                    st.markdown('</div>', unsafe_allow_html=True)
-                else:
-                    st.markdown(f'<div class="form-group">', unsafe_allow_html=True)
-                    st.markdown(f'<label for="{f}">{lbl}</label>', unsafe_allow_html=True)
-                    inputs[f] = st.text_input(lbl, value="", key=f"enc_{i}", placeholder="Enter value", label_visibility="collapsed")
-                    st.markdown('</div>', unsafe_allow_html=True)
-            
-            # Other Information
-            if other_features:
-                st.markdown('<div class="form-section">', unsafe_allow_html=True)
-                st.markdown("<h3>📝 Other Information</h3>", unsafe_allow_html=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-                
-                for i, f in enumerate(other_features):
-                    lbl = label_map.get(f, f.replace("_"," ").title())
-                    if any(x in f.lower() for x in ["num_","number_","time_","count"]):
-                        st.markdown(f'<div class="form-group">', unsafe_allow_html=True)
-                        st.markdown(f'<label for="{f}">{lbl}</label>', unsafe_allow_html=True)
-                        inputs[f] = st.number_input(lbl, value=0, step=1, key=f"oth_{i}", 
-                                                  label_visibility="collapsed", min_value=0)
-                        st.markdown('</div>', unsafe_allow_html=True)
-                    else:
-                        st.markdown(f'<div class="form-group">', unsafe_allow_html=True)
-                        st.markdown(f'<label for="{f}">{lbl}</label>', unsafe_allow_html=True)
-                        inputs[f] = st.text_input(lbl, value="", key=f"oth_{i}", placeholder="Enter value", label_visibility="collapsed")
-                        st.markdown('</div>', unsafe_allow_html=True)
         
-        else:
-            st.info("Model doesn't expose feature names. Use Batch Processing with CSV instead.")
+        # Minimal input form with dropdowns
+        st.markdown('<div class="quick-form">', unsafe_allow_html=True)
+        
+        # Age Group
+        st.markdown('<div class="form-field">', unsafe_allow_html=True)
+        st.markdown('<label for="age">Age Group</label>', unsafe_allow_html=True)
+        inputs["age"] = st.selectbox("Age Group", 
+                                   options=["Under 50", "50-59", "60-69", "70-79", "80+"], 
+                                   key="age_input", label_visibility="collapsed")
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Gender
+        st.markdown('<div class="form-field">', unsafe_allow_html=True)
+        st.markdown('<label for="gender">Gender</label>', unsafe_allow_html=True)
+        inputs["gender"] = st.selectbox("Gender", 
+                                      options=["Female", "Male", "Other/Unknown"], 
+                                      key="gender_input", label_visibility="collapsed")
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Diabetes Status
+        st.markdown('<div class="form-field">', unsafe_allow_html=True)
+        st.markdown('<label for="diabetes">Diabetes Status</label>', unsafe_allow_html=True)
+        inputs["diabetes"] = st.selectbox("Diabetes Status", 
+                                        options=["No", "Yes", "Borderline"], 
+                                        key="diabetes_input", label_visibility="collapsed")
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Number of Medications
+        st.markdown('<div class="form-field">', unsafe_allow_html=True)
+        st.markdown('<label for="medications">Number of Medications</label>', unsafe_allow_html=True)
+        inputs["medications"] = st.selectbox("Number of Medications", 
+                                           options=["None", "1-5", "6-10", "10+"], 
+                                           key="meds_input", label_visibility="collapsed")
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Previous Admissions
+        st.markdown('<div class="form-field">', unsafe_allow_html=True)
+        st.markdown('<label for="admissions">Previous Admissions (1 year)</label>', unsafe_allow_html=True)
+        inputs["admissions"] = st.selectbox("Previous Admissions (1 year)", 
+                                          options=["0", "1", "2", "3+"], 
+                                          key="admissions_input", label_visibility="collapsed")
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Time in Hospital
+        st.markdown('<div class="form-field">', unsafe_allow_html=True)
+        st.markdown('<label for="time_in_hospital">Time in Hospital (days)</label>', unsafe_allow_html=True)
+        inputs["time_in_hospital"] = st.selectbox("Time in Hospital (days)", 
+                                                options=["1-3", "4-7", "8-14", "15+"], 
+                                                key="time_input", label_visibility="collapsed")
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)  # End quick-form
+        
+        # Set default values for other required features
+        default_features = {
+            "num_lab_procedures": 45,
+            "num_procedures": 1,
+            "number_diagnoses": 9,
+            "number_emergency": 0,
+            "number_outpatient": 0,
+            "number_inpatient": 0
+        }
+        
+        for feature, value in default_features.items():
+            inputs[feature] = value
         
         # Calculate button
         if st.button("🚀 Calculate Readmission Risk", use_container_width=True, type="primary"):
@@ -576,19 +494,19 @@ with tabs[0]:
                             st.markdown(f'<div class="risk-high">', unsafe_allow_html=True)
                             st.markdown(f"<h2>🚨 High Readmission Risk</h2>", unsafe_allow_html=True)
                             st.markdown(f"<h1>{p:.1%}</h1>", unsafe_allow_html=True)
-                            st.markdown("**Clinical Recommendation:** Immediate follow-up, specialized care plan, and post-discharge monitoring required.")
+                            st.markdown("**Recommendation:** Immediate follow-up, specialized care plan, and post-discharge monitoring required.")
                             st.markdown('</div>', unsafe_allow_html=True)
                         elif p >= 0.4:
                             st.markdown(f'<div class="risk-medium">', unsafe_allow_html=True)
                             st.markdown(f"<h2>⚠️ Moderate Readmission Risk</h2>", unsafe_allow_html=True)
                             st.markdown(f"<h1>{p:.1%}</h1>", unsafe_allow_html=True)
-                            st.markdown("**Clinical Recommendation:** Standard follow-up with additional patient education and support.")
+                            st.markdown("**Recommendation:** Standard follow-up with additional patient education and support.")
                             st.markdown('</div>', unsafe_allow_html=True)
                         else:
                             st.markdown(f'<div class="risk-low">', unsafe_allow_html=True)
                             st.markdown(f"<h2>✅ Low Readmission Risk</h2>", unsafe_allow_html=True)
                             st.markdown(f"<h1>{p:.1%}</h1>", unsafe_allow_html=True)
-                            st.markdown("**Clinical Recommendation:** Standard discharge procedure with routine follow-up.")
+                            st.markdown("**Recommendation:** Standard discharge procedure with routine follow-up.")
                             st.markdown('</div>', unsafe_allow_html=True)
                         
                         # Gauge chart with enhanced design
@@ -641,17 +559,14 @@ with tabs[0]:
             # Placeholder for results area
             st.markdown('<div class="card" style="height: 600px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);">', unsafe_allow_html=True)
             st.markdown("<div style='text-align: center; color: #64748b;'>", unsafe_allow_html=True)
-            st.markdown("<h3>👈 Complete the assessment form</h3>", unsafe_allow_html=True)
-            st.markdown("<p>Fill out the patient information and click 'Calculate Readmission Risk' to see results</p>", unsafe_allow_html=True)
+            st.markdown("<h3>👈 Complete the quick assessment</h3>", unsafe_allow_html=True)
+            st.markdown("<p>Select patient information and click 'Calculate Readmission Risk'</p>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
-
-# Rest of the code remains the same as the previous version for other tabs
-# [Batch Processing, Model Analytics, Performance Dashboard tabs would follow here]
 
 # Footer
 st.markdown("---")
 st.markdown("<div style='text-align: center; color: #64748b; padding: 1rem;'>", unsafe_allow_html=True)
-st.markdown("<p>MedPredict AI Hospital Readmission Dashboard v3.2.1 | © 2023 Healthcare Analytics Inc.</p>", unsafe_allow_html=True)
-st.markdown("<p>For support contact: support@medpredict.ai | +1 (800) 555-HEALTH</p>", unsafe_allow_html=True)
+st.markdown("<p>QuickReadmit Risk Assessment v1.0.0 | © 2023 Healthcare Analytics Inc.</p>", unsafe_allow_html=True)
+st.markdown("<p>For support contact: support@quickreadmit.com | +1 (800) 555-READMIT</p>", unsafe_allow_html=True)
 st.markdown("</div>", unsafe_allow_html=True)
