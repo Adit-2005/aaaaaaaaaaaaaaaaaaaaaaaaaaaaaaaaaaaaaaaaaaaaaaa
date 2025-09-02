@@ -183,7 +183,7 @@ with st.sidebar:
         st.markdown("<div style='text-align: center; font-size: 3rem;'>🏥</div>", unsafe_allow_html=True)
     
     st.markdown("<h1 style='text-align: center; color: white; margin-bottom: 0.5rem;'>QuickReadmit</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: rgba(255, 255, 255, 0.8); margin-top: 0;'>Rapid Risk Assessment</p>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: rgba(255, 255, 255, 0.8; margin-top: 0;'>Rapid Risk Assessment</p>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
     
     st.markdown("---")
@@ -341,6 +341,16 @@ def encode_categorical_values(inputs, feature_names):
         "None": 0, "1-5": 3, "6-10": 8, "10+": 12
     }
     
+    # Admissions encoding
+    admissions_mapping = {
+        "0": 0, "1": 1, "2": 2, "3+": 3
+    }
+    
+    # Time in hospital encoding
+    time_mapping = {
+        "1-3": 2, "4-7": 5, "8-14": 11, "15+": 16
+    }
+    
     # Encode known categorical features
     for feature, value in inputs.items():
         if "age" in feature.lower() and value in age_mapping:
@@ -351,6 +361,10 @@ def encode_categorical_values(inputs, feature_names):
             encoded_inputs[feature] = diabetes_mapping[value]
         elif "med" in feature.lower() and value in meds_mapping:
             encoded_inputs[feature] = meds_mapping[value]
+        elif "admit" in feature.lower() and value in admissions_mapping:
+            encoded_inputs[feature] = admissions_mapping[value]
+        elif "time" in feature.lower() and value in time_mapping:
+            encoded_inputs[feature] = time_mapping[value]
         elif any(x in feature.lower() for x in ["num_", "number_", "time_", "count", "visit", "admit"]):
             # Ensure numeric features are properly converted
             try:
@@ -389,6 +403,33 @@ def prepare_input_data(inputs, feature_names):
             X[feature] = [0.0]
     
     return X
+
+# Function to safely get prediction probability
+def safe_predict_proba(model, X):
+    """Safely get prediction probability with error handling"""
+    try:
+        if hasattr(model, "predict_proba"):
+            proba = model.predict_proba(X)
+            # Ensure we're getting the probability for class 1 (readmission)
+            if proba.shape[1] > 1:  # If it's a binary classifier
+                p = float(proba[:, 1][0])
+            else:  # If it's a single class output
+                p = float(proba[0][0])
+            
+            # Ensure the probability is between 0 and 1
+            if p > 1.0:
+                p = 1.0
+            elif p < 0.0:
+                p = 0.0
+                
+            return p
+        else:
+            pred = model.predict(X)[0]
+            # If we only have predict, return 1.0 for positive class, 0.0 for negative
+            return 1.0 if pred == 1 else 0.0
+    except Exception as e:
+        st.error(f"Prediction error: {str(e)}")
+        return 0.5  # Return neutral probability on error
 
 with tabs[0]:
     st.markdown('<div class="card">', unsafe_allow_html=True)
@@ -457,14 +498,18 @@ with tabs[0]:
         
         st.markdown('</div>', unsafe_allow_html=True)  # End quick-form
         
-        # Set default values for other required features
+        # Set default values for other required features based on common hospital readmission models
         default_features = {
             "num_lab_procedures": 45,
             "num_procedures": 1,
             "number_diagnoses": 9,
             "number_emergency": 0,
             "number_outpatient": 0,
-            "number_inpatient": 0
+            "number_inpatient": 0,
+            "max_glu_serum": 0,
+            "A1Cresult": 0,
+            "change": 0,
+            "diabetesMed": 0
         }
         
         for feature, value in default_features.items():
@@ -486,70 +531,66 @@ with tabs[0]:
                     # Prepare input data in correct format
                     X = prepare_input_data(inputs, feature_names)
                     
-                    if hasattr(model, "predict_proba"):
-                        p = float(model.predict_proba(X)[:,1][0])
-                        
-                        # Show result card with enhanced design
-                        if p >= 0.7:
-                            st.markdown(f'<div class="risk-high">', unsafe_allow_html=True)
-                            st.markdown(f"<h2>🚨 High Readmission Risk</h2>", unsafe_allow_html=True)
-                            st.markdown(f"<h1>{p:.1%}</h1>", unsafe_allow_html=True)
-                            st.markdown("**Recommendation:** Immediate follow-up, specialized care plan, and post-discharge monitoring required.")
-                            st.markdown('</div>', unsafe_allow_html=True)
-                        elif p >= 0.4:
-                            st.markdown(f'<div class="risk-medium">', unsafe_allow_html=True)
-                            st.markdown(f"<h2>⚠️ Moderate Readmission Risk</h2>", unsafe_allow_html=True)
-                            st.markdown(f"<h1>{p:.1%}</h1>", unsafe_allow_html=True)
-                            st.markdown("**Recommendation:** Standard follow-up with additional patient education and support.")
-                            st.markdown('</div>', unsafe_allow_html=True)
-                        else:
-                            st.markdown(f'<div class="risk-low">', unsafe_allow_html=True)
-                            st.markdown(f"<h2>✅ Low Readmission Risk</h2>", unsafe_allow_html=True)
-                            st.markdown(f"<h1>{p:.1%}</h1>", unsafe_allow_html=True)
-                            st.markdown("**Recommendation:** Standard discharge procedure with routine follow-up.")
-                            st.markdown('</div>', unsafe_allow_html=True)
-                        
-                        # Gauge chart with enhanced design
-                        fig = go.Figure(go.Indicator(
-                            mode = "gauge+number+delta",
-                            value = p,
-                            domain = {'x': [0, 1], 'y': [0, 1]},
-                            title = {'text': "Readmission Probability", 'font': {'size': 20}},
-                            delta = {'reference': 0.5, 'increasing': {'color': "#ef4444"}, 'decreasing': {'color': "#10b981"}},
-                            gauge = {
-                                'axis': {'range': [0, 1], 'tickwidth': 1, 'tickcolor': "darkblue"},
-                                'bar': {'color': "darkblue"},
-                                'bgcolor': "white",
-                                'borderwidth': 2,
-                                'bordercolor': "gray",
-                                'steps': [
-                                    {'range': [0, 0.3], 'color': '#dcfce7'},
-                                    {'range': [0.3, 0.5], 'color': '#fef3c7'},
-                                    {'range': [0.5, 0.7], 'color': '#fed7aa'},
-                                    {'range': [0.7, 1], 'color': '#fee2e2'}],
-                                'threshold': {
-                                    'line': {'color': "red", 'width': 4},
-                                    'thickness': 0.75,
-                                    'value': 0.5}}))
-                        
-                        fig.update_layout(height=300, font={'color': "darkblue", 'family': "Arial"})
-                        st.plotly_chart(fig, use_container_width=True)
-                        
-                        # Risk factors (if feature importance is available)
-                        if hasattr(model, "feature_importances_") and feature_names:
-                            st.markdown("### 🔍 Key Risk Factors")
-                            fi = model.feature_importances_
-                            # Get top 5 features
-                            top_indices = np.argsort(fi)[::-1][:5]
-                            for i, idx in enumerate(top_indices):
-                                feature = feature_names[idx]
-                                importance = fi[idx]
-                                st.markdown(f"{i+1}. **{label_map.get(feature, feature.replace('_', ' ').title())}** "
-                                           f"({importance:.3f})")
+                    # Get prediction probability with error handling
+                    p = safe_predict_proba(model, X)
                     
+                    # Show result card with enhanced design
+                    if p >= 0.7:
+                        st.markdown(f'<div class="risk-high">', unsafe_allow_html=True)
+                        st.markdown(f"<h2>🚨 High Readmission Risk</h2>", unsafe_allow_html=True)
+                        st.markdown(f"<h1>{p:.1%}</h1>", unsafe_allow_html=True)
+                        st.markdown("**Recommendation:** Immediate follow-up, specialized care plan, and post-discharge monitoring required.")
+                        st.markdown('</div>', unsafe_allow_html=True)
+                    elif p >= 0.4:
+                        st.markdown(f'<div class="risk-medium">', unsafe_allow_html=True)
+                        st.markdown(f"<h2>⚠️ Moderate Readmission Risk</h2>", unsafe_allow_html=True)
+                        st.markdown(f"<h1>{p:.1%}</h1>", unsafe_allow_html=True)
+                        st.markdown("**Recommendation:** Standard follow-up with additional patient education and support.")
+                        st.markdown('</div>', unsafe_allow_html=True)
                     else:
-                        pred = model.predict(X)[0]
-                        st.info(f"Prediction: {'Readmitted' if pred == 1 else 'Not Readmitted'}")
+                        st.markdown(f'<div class="risk-low">', unsafe_allow_html=True)
+                        st.markdown(f"<h2>✅ Low Readmission Risk</h2>", unsafe_allow_html=True)
+                        st.markdown(f"<h1>{p:.1%}</h1>", unsafe_allow_html=True)
+                        st.markdown("**Recommendation:** Standard discharge procedure with routine follow-up.")
+                        st.markdown('</div>', unsafe_allow_html=True)
+                    
+                    # Gauge chart with enhanced design
+                    fig = go.Figure(go.Indicator(
+                        mode = "gauge+number+delta",
+                        value = p,
+                        domain = {'x': [0, 1], 'y': [0, 1]},
+                        title = {'text': "Readmission Probability", 'font': {'size': 20}},
+                        delta = {'reference': 0.5, 'increasing': {'color': "#ef4444"}, 'decreasing': {'color': "#10b981"}},
+                        gauge = {
+                            'axis': {'range': [0, 1], 'tickwidth': 1, 'tickcolor': "darkblue"},
+                            'bar': {'color': "darkblue"},
+                            'bgcolor': "white",
+                            'borderwidth': 2,
+                            'bordercolor': "gray",
+                            'steps': [
+                                {'range': [0, 0.3], 'color': '#dcfce7'},
+                                {'range': [0.3, 0.5], 'color': '#fef3c7'},
+                                {'range': [0.5, 0.7], 'color': '#fed7aa'},
+                                {'range': [0.7, 1], 'color': '#fee2e2'}],
+                            'threshold': {
+                                'line': {'color': "red", 'width': 4},
+                                'thickness': 0.75,
+                                'value': 0.5}}))
+                    
+                    fig.update_layout(height=300, font={'color': "darkblue", 'family': "Arial"})
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # Risk factors (if feature importance is available)
+                    if hasattr(model, "feature_importances_") and feature_names:
+                        st.markdown("### 🔍 Key Risk Factors")
+                        fi = model.feature_importances_
+                        # Get top 5 features
+                        top_indices = np.argsort(fi)[::-1][:5]
+                        for i, idx in enumerate(top_indices):
+                            feature = feature_names[idx]
+                            importance = fi[idx]
+                            st.markdown(f"{i+1}. **{label_map.get(feature, feature.replace('_', ' ').title())}** "
+                                       f"({importance:.3f})")
             
             except Exception as e:
                 st.error("Prediction failed: " + str(e))
