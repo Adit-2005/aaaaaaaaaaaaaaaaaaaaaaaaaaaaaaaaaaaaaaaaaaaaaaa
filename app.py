@@ -213,6 +213,30 @@ with col4:
 # Tabs with improved styling
 tabs = st.tabs(["📋 Single Patient", "📊 Batch Scoring", "🔍 Model Insights", "📈 Data Overview"])
 
+# Function to prepare input data in correct format
+def prepare_input_data(inputs, feature_names):
+    """Prepare input data in the correct format and order for the model"""
+    if feature_names is None:
+        return pd.DataFrame([inputs])
+    
+    # Create a DataFrame with the correct feature order
+    X = pd.DataFrame(columns=feature_names)
+    
+    # Fill in the values, converting to numeric where possible
+    for feature in feature_names:
+        if feature in inputs:
+            try:
+                # Try to convert to numeric
+                X[feature] = [pd.to_numeric(inputs[feature])]
+            except (ValueError, TypeError):
+                # If conversion fails, keep as string
+                X[feature] = [inputs[feature]]
+        else:
+            # Fill missing features with default values
+            X[feature] = [0]  # Default numeric value
+    
+    return X
+
 with tabs[0]:
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.subheader("Single Patient Scoring")
@@ -241,7 +265,7 @@ with tabs[0]:
                     elif "gender" in f.lower():
                         inputs[f] = st.selectbox(lbl, options=["Female", "Male", "Other/Unknown"], key=f"demo_{i}")
                     else:
-                        inputs[f] = st.text_input(lbl, key=f"demo_{i}")
+                        inputs[f] = st.text_input(lbl, value="", key=f"demo_{i}")
             
             with st.expander("Medical Information"):
                 for i, f in enumerate(medical_features):
@@ -249,7 +273,7 @@ with tabs[0]:
                     if any(x in f.lower() for x in ["num_","number_","time_","count"]):
                         inputs[f] = st.number_input(lbl, value=0, step=1, key=f"med_{i}")
                     else:
-                        inputs[f] = st.text_input(lbl, key=f"med_{i}")
+                        inputs[f] = st.text_input(lbl, value="", key=f"med_{i}")
             
             with st.expander("Encounter Details"):
                 for i, f in enumerate(encounter_features):
@@ -257,7 +281,7 @@ with tabs[0]:
                     if any(x in f.lower() for x in ["num_","number_","time_","count"]):
                         inputs[f] = st.number_input(lbl, value=0, step=1, key=f"enc_{i}")
                     else:
-                        inputs[f] = st.text_input(lbl, key=f"enc_{i}")
+                        inputs[f] = st.text_input(lbl, value="", key=f"enc_{i}")
             
             if other_features:
                 with st.expander("Other Information"):
@@ -266,7 +290,7 @@ with tabs[0]:
                         if any(x in f.lower() for x in ["num_","number_","time_","count"]):
                             inputs[f] = st.number_input(lbl, value=0, step=1, key=f"oth_{i}")
                         else:
-                            inputs[f] = st.text_input(lbl, key=f"oth_{i}")
+                            inputs[f] = st.text_input(lbl, value="", key=f"oth_{i}")
         
         else:
             st.info("Model doesn't expose feature names. Use Batch Scoring with CSV instead.")
@@ -279,13 +303,8 @@ with tabs[0]:
     with right:
         if 'predict_clicked' in st.session_state and st.session_state.predict_clicked:
             try:
-                X = pd.DataFrame([inputs])
-                # convert numeric-like
-                for c in X.columns:
-                    try:
-                        X[c] = pd.to_numeric(X[c])
-                    except Exception:
-                        pass
+                # Prepare input data in correct format
+                X = prepare_input_data(inputs, feature_names)
                 
                 if hasattr(model, "predict_proba"):
                     p = float(model.predict_proba(X)[:,1][0])
@@ -377,6 +396,7 @@ with tabs[1]:
                     st.error(f"Missing columns: {', '.join(missing)}")
                     st.stop()
                 else:
+                    # Ensure correct column order
                     X = df[feature_names]
             else:
                 X = df
