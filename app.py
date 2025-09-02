@@ -134,7 +134,8 @@ with tab1:
                        st.markdown(f"""
 <div style='border-radius:12px;padding:18px;background:linear-gradient(90deg,#fff7e6,#fff2de);'>
 """, unsafe_allow_html=True)
-<h2 style='color:#b35b00;margin:0'>Risk: { 'High' if p>=0.5 else 'Low' } — {p:.2%}</h2>
+<h2 style='color:#b35b00;margin:0'>Risk: { 'High' if p>=0.5 else 'Low' } - {p:.2%}</h2>
+
 <p style='margin:0'>Recommendation: { 'Close follow-up' if p>=0.5 else 'Standard discharge' }</p>
 </div>\"\"\", unsafe_allow_html=True)
                         # gauge chart
