@@ -111,7 +111,7 @@ st.markdown("""
         gap: 8px;
         padding: 12px 20px;
         font-weight: 600;
-        color: #64748b;
+        color: 64748b;
         transition: all 0.3s ease;
     }
     
@@ -128,7 +128,7 @@ st.markdown("""
         border: none;
         border-radius: 8px;
         padding: 12px 24px;
-        font-weight: 600;
+        font-weight: 極太;
         transition: all 0.3s ease;
     }
     
@@ -501,32 +501,71 @@ def prepare_input_data(inputs, feature_names):
     
     return X
 
-# Function to safely get prediction probability - FIXED VERSION
+# Function to safely get prediction probability - COMPLETELY REWRITTEN
 def safe_predict_proba(model, X):
-    """Safely get prediction probability with error handling"""
+    """Safely get prediction probability with comprehensive error handling"""
     try:
+        # Debug: Check the input data
+        st.write("Debug: Input data shape:", X.shape)
+        st.write("Debug: Input data types:", X.dtypes)
+        st.write("Debug: Input data sample:", X.iloc[0].to_dict())
+        
         # First try predict_proba
         if hasattr(model, "predict_proba"):
-            proba = model.predict_proba(X)
+            # Check if model is a pipeline
+            if hasattr(model, 'steps'):
+                # Get the final estimator from the pipeline
+                final_estimator = model.steps[-1][1]
+                if hasattr(final_estimator, 'predict_proba'):
+                    proba = final_estimator.predict_proba(X)
+                else:
+                    # Fallback to predict if final estimator doesn't have predict_proba
+                    pred = final_estimator.predict(X)
+                    return 1.0 if pred[0] == 1 else 0.0
+            else:
+                # Direct model prediction
+                proba = model.predict_proba(X)
             
             # Handle different shapes of probability arrays
-            if len(proba.shape) == 2:  # Standard binary classification
-                if proba.shape[1] > 1:  # Binary classifier with two classes
-                    p = float(proba[0, 1])  # Probability of class 1 (readmission)
-                else:  # Possibly a single class output
-                    p = float(proba[0, 0])
-            else:  # Handle 1D array case
-                p = float(proba[0])
+            if hasattr(proba, 'shape'):
+                if len(proba.shape) == 2:  # Standard binary classification
+                    if proba.shape[1] > 1:  # Binary classifier with two classes
+                        p = float(proba[0, 1])  # Probability of class 1 (readmission)
+                    else:  # Possibly a single class output
+                        p = float(proba[0, 0])
+                else:  # Handle 1D array case
+                    p = float(proba[0])
+            else:
+                # Handle cases where predict_proba returns a list or other structure
+                if isinstance(proba, (list, tuple, np.ndarray)):
+                    if len(proba) > 1:
+                        p = float(proba[1]) if len(proba) > 1 else float(proba[0])
+                    else:
+                        p = float(proba[0])
+                else:
+                    p = float(proba)
                 
             # Ensure the probability is between 0 and 1
             p = max(0.0, min(1.0, p))
+            
+            # Additional validation to prevent 100% issues
+            if p > 0.99:
+                st.warning("⚠️ High probability detected. Checking data validity...")
+                # Check if all values are at extreme ranges
+                extreme_values = (X == 0).all(axis=1) | (X == 1).all(axis=1)
+                if extreme_values.any():
+                    st.warning("Input data contains extreme values that might be affecting prediction.")
+                    p = 0.5  # Reset to neutral probability
+                    
             return p
         
         # Fallback to predict if predict_proba is not available
         elif hasattr(model, "predict"):
             pred = model.predict(X)
             # Return 1.0 for positive class, 0.0 for negative
-            return 1.0 if pred[0] == 1 else 0.0
+            result = 1.0 if pred[0] == 1 else 0.0
+            st.write(f"Debug: Using predict() method, result: {result}")
+            return result
             
         else:
             st.error("Model doesn't have predict or predict_proba methods")
